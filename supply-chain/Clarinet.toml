@@ -1,0 +1,6 @@
+[project]
+name = "supply-chain"
+requirements = []
+[contracts.chain]
+path = "contracts/chain.clar"
+depends_on = []
