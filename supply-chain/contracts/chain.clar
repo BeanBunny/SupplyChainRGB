@@ -28,7 +28,7 @@
 (define-public (add_item (id uint) (des (string-ascii 50)))
     (if (is-eq (map-insert supply-chain {item-id: id} {desc: des, man: false, pkg: false, ship: false, OUD: false, del: false}) true)
         (ok "Successfully added to supply chain")
-        (ok "Can not add 2 items with same id")
+        (err "Can not add 2 items with same id")
     )
 )
 
@@ -38,9 +38,9 @@
         )
         
         (if (is-eq (map-set supply-chain {item-id: id} {desc: x, man: true, pkg: false, ship: false, OUD: false, del: false}) true)
-        (ok "Item is manufactured.")
-        (ok "No such item exists with this id is on the Supply Chain.")
-    )
+            (ok "Item is manufactured.")
+            (err "No such item exists with this id is on the Supply Chain.")
+        )
     )
 )
 
