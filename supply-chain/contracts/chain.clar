@@ -1,85 +1,93 @@
+(define-constant NOT_SATISFIED u0)
 (define-map supply-chain {item-id: uint} {desc: (string-ascii 50), man: bool, pkg: bool, ship: bool, OUD: bool, del: bool})
 
-define-read-only (description (id uint))
-    (get desc (map-get? supply-chain {item-id: id}))
+(define-read-only (description (id uint))
+    (unwrap-panic (get desc (map-get? supply-chain {item-id: id})))
 )
 
 (define-read-only (manufac (id uint))
-    (get man (map-get? supply-chain {item-id: id}))
+    (unwrap-panic (get man (map-get? supply-chain {item-id: id})))
 )
 
 (define-read-only (packed (id uint))
-    (get pkg (map-get? supply-chain {item-id: id}))
+    (unwrap-panic (get pkg (map-get? supply-chain {item-id: id})))
 )
 
 (define-read-only (shipped (id uint))
-    (get ship (map-get? supply-chain {item-id: id}))
+    (unwrap-panic (get ship (map-get? supply-chain {item-id: id})))
 )
 
 (define-read-only (outfordelivery (id uint))
-    (get OUD (map-get? supply-chain {item-id: id}))
+    (unwrap-panic (get OUD (map-get? supply-chain {item-id: id})))
 )
 
 (define-read-only (delivered (id uint))
-    (get del (map-get? supply-chain {item-id: id}))
+    (unwrap-panic (get del (map-get? supply-chain {item-id: id})))
 )
 
 (define-public (add_item (id uint) (des (string-ascii 50)))
-    (ok (map-insert supply-chain {item-id: id} {desc: des, man: false, pkg: false, ship: false, OUD: false, del: false}))
+    (if (is-eq (map-insert supply-chain {item-id: id} {desc: des, man: false, pkg: false, ship: false, OUD: false, del: false}) true)
+        (ok "Successfully added to supply chain")
+        (ok "Can not add 2 items with same id")
+    )
 )
 
 (define-public (change-man (id uint))
-    (let(
+    (let (
             (x (description id))
         )
-        (ok (map-set supply-chain {item-id: id} {desc: x, man: true, pkg: false, ship: false, OUD: false, del: false}))
+        
+        (if (is-eq (map-set supply-chain {item-id: id} {desc: x, man: true, pkg: false, ship: false, OUD: false, del: false}) true)
+        (ok "Item is manufactured.")
+        (ok "No such item exists with this id is on the Supply Chain.")
+    )
     )
 )
 
 (define-public (change-pkg (id uint))
-    (let(
+    (let (
             (x (description id))
             (y (manufac id))
         )
         (if (is-eq y true)
-        (ok (map-set supply-chain {item-id: id} {desc: x, man: true, pkg: true, ship: false, OUD: false, del: false}))
-        (err u0)
+            (ok (map-set supply-chain {item-id: id} {desc: x, man: true, pkg: true, ship: false, OUD: false, del: false}))
+            (err {kind: "Item hasn't been manufactured yet.", code: NOT_SATISFIED})
         )
     )
 )
 
 (define-public (change-ship (id uint))
-    (let(
+    (let (
             (x (description id))
             (y (packed id))
         )
         (if (is-eq y true)
-        (ok (map-set supply-chain {item-id: id} {desc: x, man: true, pkg: true, ship: true, OUD: false, del: false}))
-        (err u0)
+            (ok (map-set supply-chain {item-id: id} {desc: x, man: true, pkg: true, ship: true, OUD: false, del: false}))
+            (err {kind: "Item hasn't been packed yet.", code: NOT_SATISFIED})
         )
     )
 )
 
 (define-public (change-OUD (id uint))
-    (let(
+    (let (
             (x (description id))
             (y (shipped id))
         )
         (if (is-eq y true)
-        (ok (map-set supply-chain {item-id: id} {desc: x, man: true, pkg: true, ship: true, OUD: true, del: false}))
-        (err u0)
+            (ok (map-set supply-chain {item-id: id} {desc: x, man: true, pkg: true, ship: true, OUD: true, del: false}))
+            (err {kind: "Item hasn't been shipped yet.", code: NOT_SATISFIED})
         )
     )
 )
 
 (define-public (change-del (id uint))
-    (let(
+    (let (
             (x (description id))
             (y (outfordelivery id))
         )
         (if (is-eq y true)
-        (ok (map-set supply-chain {item-id: id} {desc: x, man: true, pkg: true, ship: true, OUD: true, del: true}))
-        (err u0)
+            (ok (map-set supply-chain {item-id: id} {desc: x, man: true, pkg: true, ship: true, OUD: true, del: true}))
+            (err {kind: "Item isn't on the way.", code: NOT_SATISFIED})
         )
     )
 )
